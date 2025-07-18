@@ -1,35 +1,65 @@
+/* General reset + base styles */
 body {
     margin: 0;
-    font-family: sans-serif;
-    background: #fff;
-    color: #111;
+    font-family: 'Helvetica Neue', sans-serif;
+    background: #f9f9f9;
+    color: #222;
 }
 
 header {
     text-align: center;
-    padding: 2rem;
+    padding: 4rem 1rem 2rem;
+}
+
+header h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+header p {
+    font-size: 1.2rem;
+    color: #555;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1rem;
-    padding: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .item {
     display: flex;
     flex-direction: column;
     align-items: center;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.item:hover {
+    transform: translateY(-5px);
 }
 
 .item video,
 .item img {
     width: 100%;
-    max-width: 500px;
-    border-radius: 8px;
+    display: block;
 }
 
 .item p {
-    margin-top: 0.5rem;
+    margin: 1rem;
+    font-size: 1rem;
+    color: #333;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 0.9rem;
+    color: #777;
 }
