@@ -1,0 +1,17 @@
+:root {
+  --background-color: #0D0D0D;
+  --foreground-color: #E7ECCF;
+  --accent-color: #beff00;
+
+  --font-header: 'SohneMonoHalbfettKursiv', monospace;
+  --font-subheader: 'ABCMaxiLight', sans-serif;
+  --font-subheader-bold: 'ABCMaxiBold', sans-serif;
+  --font-body: 'SohneKraeftig', sans-serif;
+  --font-body-bold: 'SohneFett', sans-serif;
+}
+
+.light-theme {
+  --background-color: #E7ECCF;
+  --foreground-color: #0D0D0D;
+  --accent-color: #FF0065;
+}

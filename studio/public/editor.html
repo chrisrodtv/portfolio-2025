@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Editor</title>
+  <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+  <div class="editor-container">
+    <h2>Editing: <span id="pageName">Untitled</span></h2>
+
+    <label for="title">Page Title</label>
+    <input type="text" id="title" />
+
+    <div class="toolbar">
+      <button onclick="insertTag('**', '**')"><b>B</b></button>
+      <button onclick="insertTag('*', '*')"><i>I</i></button>
+      <button onclick="insertTag('# ', '')">H1</button>
+      <button onclick="insertTag('## ', '')">H2</button>
+      <button onclick="insertTag('[', '](url)')">Link</button>
+    </div>
+
+    <label for="markdown">Markdown Content</label>
+    <textarea id="markdown" placeholder="Write your page content here..." oninput="updatePreview()"></textarea>
+
+    <div 
+      id="drop-area" 
+      ondrop="handleDrop(event)" 
+      ondragover="event.preventDefault()"
+    >
+      <p>Drag & drop images here</p>
+    </div>
+
+    <button id="saveBtn" onclick="savePage()">💾 Save Page</button>
+
+    <div class="preview">
+      <h3>Live Preview</h3>
+      <div id="preview-content"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

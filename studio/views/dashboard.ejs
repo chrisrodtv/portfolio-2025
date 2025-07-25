@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Studio Dashboard</title>
+  <link rel="stylesheet" href="/css/editor.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Project Dashboard</h1>
+    <ul class="dashboard-list">
+      <% pages.forEach(page => { %>
+        <li><a href="/edit?project=<%= page %>"><%= page %></a></li>
+      <% }) %>
+    </ul>
+  </div>
+</body>
+</html>
