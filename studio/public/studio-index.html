@@ -1,97 +1,123 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Studio — Visual Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>STUDIO — EDITOR</title>
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/editor.css" />
   <style>
     body {
-      background-color: #0d0d0d;
-      color: #e7eccf;
-      font-family: 'Söhne', sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      background: var(--background-color);
+      color: var(--foreground-color);
+      font-family: monospace;
       padding: 2rem;
     }
-
-    nav a {
-      color: #e7eccf;
-      margin: 0 1.5rem;
-      text-decoration: none;
-      text-transform: uppercase;
-      font-family: 'ABC Maxi', sans-serif;
+    #editor {
+      width: 100%;
+      height: 80vh;
+      background: #111;
+      color: #BEFF00;
+      font-family: monospace;
+      padding: 1rem;
+      border: 1px solid #333;
     }
-
-    nav a:hover {
-      font-family: 'BC Maxi Bold', sans-serif;
+    label, select, input {
+      font-size: 1rem;
+      margin-right: 1rem;
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
-      padding: 2rem;
-    }
-
-    .project {
-      position: relative;
+    #saveBtn {
+      background: var(--accent-color);
+      color: black;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border: none;
       cursor: pointer;
     }
-
-    .project img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    .edit-overlay {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.75);
-      color: #beff00;
-      padding: 5px 8px;
-      font-size: 12px;
-      border-radius: 4px;
-      pointer-events: none;
+    .meta-inputs {
+      margin: 1rem 0;
     }
   </style>
 </head>
 <body>
+  <h1>STUDIO — EDITOR</h1>
 
-  <header>
-    <nav>
-      <a href="#">WORK</a> —
-      <a href="#">REEL</a> —
-      <a href="#">FUNZIES</a> —
-      <a href="#">INFO</a>
-    </nav>
-    <img src="/assets/icons/moth.svg" alt="logo" height="40" />
-  </header>
+  <label for="dropdown">Select Project:</label>
+  <select id="dropdown"></select>
+  <button id="saveBtn" onclick="saveProject()">💾 Save</button>
 
-  <main class="grid">
-    <div class="project">
-      <img src="/assets/media/projects/fc-final-renders/thumb.jpg" alt="Project 1" />
-      <div class="edit-overlay">Edit</div>
-    </div>
-    <div class="project">
-      <img src="/assets/media/projects/skate-final-renders/thumb.jpg" alt="Project 2" />
-      <div class="edit-overlay">Edit</div>
-    </div>
-    <div class="project">
-      <img src="/assets/media/projects/cyber-final-renders/thumb.jpg" alt="Project 3" />
-      <div class="edit-overlay">Edit</div>
-    </div>
-    <!-- Add more project slots here -->
-  </main>
+  <div class="meta-inputs">
+    <label>Title:</label>
+    <input type="text" id="metaTitle" placeholder="Project Title" />
+    <label>Description:</label>
+    <input type="text" id="metaDescription" placeholder="Project Description" />
+  </div>
 
+  <textarea id="editor"></textarea>
+
+  <script>
+    const dropdown = document.getElementById('dropdown');
+    const editor = document.getElementById('editor');
+    const metaTitle = document.getElementById('metaTitle');
+    const metaDescription = document.getElementById('metaDescription');
+
+    // Load project list on start
+    fetch('/projects')
+      .then(res => res.json())
+      .then(projects => {
+        projects.forEach(file => {
+          const opt = document.createElement('option');
+          opt.value = file.path;
+          opt.textContent = file.name;
+          dropdown.appendChild(opt);
+        });
+        if (projects.length > 0) loadProject();
+      });
+
+    dropdown.addEventListener('change', loadProject);
+
+    async function loadProject() {
+      const path = dropdown.value;
+      const res = await fetch(`/load?path=${encodeURIComponent(path)}`);
+      const text = await res.text();
+      editor.value = text;
+
+      const titleMatch = text.match(/<!--\s*title\s*:\s*([\s\S]*?)\s*-->/i);
+      const descMatch = text.match(/<!--\s*description\s*:\s*([\s\S]*?)\s*-->/i);
+
+      metaTitle.value = titleMatch ? titleMatch[1].trim() : '';
+      metaDescription.value = descMatch ? descMatch[1].trim() : '';
+    }
+
+    async function saveProject() {
+      const path = dropdown.value;
+      const title = metaTitle.value;
+      const description = metaDescription.value;
+
+      let updated = editor.value;
+
+      // Replace or insert title
+      if (/<!--\s*title\s*:\s*.*?-->/i.test(updated)) {
+        updated = updated.replace(/<!--\s*title\s*:\s*.*?-->/i, `<!-- title: ${title} -->`);
+      } else {
+        updated = `<!-- title: ${title} -->\n` + updated;
+      }
+
+      // Replace or insert description
+      if (/<!--\s*description\s*:\s*.*?-->/i.test(updated)) {
+        updated = updated.replace(/<!--\s*description\s*:\s*.*?-->/i, `<!-- description: ${description} -->`);
+      } else {
+        updated = updated.replace(/(<!-- title:.*?-->)/i, `$1\n<!-- description: ${description} -->`);
+      }
+
+      await fetch('/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path, content: updated })
+      });
+
+      alert('Saved!');
+    }
+  </script>
 </body>
 </html>
