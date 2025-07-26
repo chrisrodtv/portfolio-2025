@@ -1,80 +1,70 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import multer from 'multer';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
 const app = express();
-const PORT = 3000;
+const upload = multer({ dest: 'uploads/' });
 
-// Middleware to parse JSON
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const projectRoot = path.join(__dirname, '..'); // go up one level to /portfolio-2025
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/pages', express.static(path.join(__dirname, 'pages')));
-app.use('/studio', express.static(path.join(__dirname, 'studio')));
-
-// 🔧 Route: Get list of projects (from /pages/work/)
-app.get('/projects', async (req, res) => {
-  const baseDir = path.join(__dirname, 'pages', 'work');
-
-  try {
-    const folders = await fs.promises.readdir(baseDir, { withFileTypes: true });
-
-    const projects = [];
-
-    for (const folder of folders) {
-      if (folder.isDirectory()) {
-        const htmlPath = path.join(baseDir, folder.name, `${folder.name}-index.html`);
-        try {
-          await fs.promises.access(htmlPath);
-          projects.push({
-            name: folder.name,
-            path: `/pages/work/${folder.name}/${folder.name}-index.html`,
-          });
-        } catch {
-          // skip folders with no matching HTML file
-        }
-      }
+// Serve global assets and pages
+app.use('/assets', express.static(path.join(projectRoot, 'assets'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
     }
-
-    res.json(projects);
-  } catch (err) {
-    console.error('Error reading projects:', err);
-    res.status(500).send('Could not load projects');
   }
+}));
+
+app.use('/pages', express.static(path.join(projectRoot, 'pages')));
+app.use(express.static(__dirname)); // for studio-index.html
+app.use(express.json());
+
+// Serve the studio editor
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'studio-index.html'));
 });
 
-// 🔧 Route: Load a project file
-app.get('/load', async (req, res) => {
-  const filePath = path.join(__dirname, req.query.path || '');
-  try {
-    const content = await fs.promises.readFile(filePath, 'utf-8');
-    res.send(content);
-  } catch (err) {
-    console.error('Failed to load file:', err);
-    res.status(500).send('Failed to load file');
-  }
+// List all project files under /pages/work/
+app.get('/list-projects', (req, res) => {
+  const workDir = path.join(projectRoot, 'pages/work');
+  const projects = fs.readdirSync(workDir)
+    .filter(f => f.endsWith('-index.html'))
+    .map(f => `work/${f}`);
+  res.json(['info.html', 'reel.html', 'funzies.html', ...projects]);
 });
 
-// 🔧 Route: Save a project file
-app.post('/save', async (req, res) => {
-  const filePath = path.join(__dirname, req.body.path || '');
-  const content = req.body.content || '';
-  try {
-    await fs.promises.writeFile(filePath, content, 'utf-8');
-    res.send('Saved');
-  } catch (err) {
-    console.error('Failed to save file:', err);
-    res.status(500).send('Failed to save file');
-  }
+// Save edited HTML
+app.post('/save-html', (req, res) => {
+  const { path: filePath, html } = req.body;
+  const fullPath = path.join(projectRoot, 'pages', filePath);
+  fs.writeFileSync(fullPath, html, 'utf-8');
+  res.sendStatus(200);
 });
 
-// Default fallback
-app.get('*', (req, res) => {
-  res.status(404).send('Page not found');
+// Duplicate a page
+app.post('/duplicate-page', (req, res) => {
+  const { from, to } = req.body;
+  const src = path.join(projectRoot, 'pages', from);
+  const dest = path.join(projectRoot, 'pages', to);
+  fs.copyFileSync(src, dest);
+  res.sendStatus(200);
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+// Upload media to global media folder
+app.post('/upload', upload.single('file'), (req, res) => {
+  const filename = req.file.originalname;
+  const tempPath = req.file.path;
+  const targetPath = path.join(projectRoot, 'assets/media/', filename);
+  fs.renameSync(tempPath, targetPath);
+  res.sendStatus(200);
+});
+
+app.listen(3000, () => {
+  console.log('Studio Editor running at http://localhost:3000');
 });

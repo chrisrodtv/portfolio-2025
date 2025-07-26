@@ -1,125 +1,74 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>STUDIO — EDITOR</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/editor.css" />
-  <style>
-    body {
-      background: var(--background-color);
-      color: var(--foreground-color);
-      font-family: monospace;
-      padding: 2rem;
-    }
-    #editor {
-      width: 100%;
-      height: 80vh;
-      background: #111;
-      color: #BEFF00;
-      font-family: monospace;
-      padding: 1rem;
-      border: 1px solid #333;
-    }
-    label, select, input {
-      font-size: 1rem;
-      margin-right: 1rem;
-    }
-    #saveBtn {
-      background: var(--accent-color);
-      color: black;
-      padding: 0.5rem 1rem;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-    .meta-inputs {
-      margin: 1rem 0;
-    }
-  </style>
+  <title>Studio Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/assets/css/studio.css" />
 </head>
 <body>
-  <h1>STUDIO — EDITOR</h1>
+  <div id="studio">
+    <aside id="sidebar">
+      <h2>Project</h2>
+      <select id="projectSelector"></select>
 
-  <label for="dropdown">Select Project:</label>
-  <select id="dropdown"></select>
-  <button id="saveBtn" onclick="saveProject()">💾 Save</button>
+      <h3>Title</h3>
+      <input type="text" id="pageTitle" />
 
-  <div class="meta-inputs">
-    <label>Title:</label>
-    <input type="text" id="metaTitle" placeholder="Project Title" />
-    <label>Description:</label>
-    <input type="text" id="metaDescription" placeholder="Project Description" />
+      <h3>Description</h3>
+      <textarea id="pageDescription"></textarea>
+
+      <h3>Blocks</h3>
+      <button onclick="insertSection()">Add Section</button>
+      <button onclick="insertImageGrid()">Insert Image Grid</button>
+      <button onclick="insertButton()">Insert Button</button>
+
+      <h3>Media</h3>
+      <div id="mediaBrowser"></div>
+      <input type="file" id="mediaUpload" multiple onchange="handleUpload(this.files)" />
+
+      <h3>Styles</h3>
+      <div id="styleControls">
+        <label>Font:</label>
+        <select id="fontSelector">
+          <option value="inherit">Inherit</option>
+          <option value="Söhne">Söhne</option>
+          <option value="ABC Maxi">ABC Maxi</option>
+        </select>
+        <label>Color:</label>
+        <input type="color" id="colorPicker" />
+        <label>Padding:</label>
+        <input type="range" id="paddingSlider" min="0" max="100" />
+      </div>
+
+      <h3>Global Styles</h3>
+      <label>--foreground-color</label>
+      <input type="color" id="fgColor" />
+      <label>--background-color</label>
+      <input type="color" id="bgColor" />
+      <label>--accent-color</label>
+      <input type="color" id="accentColor" />
+
+      <h3>Actions</h3>
+      <button onclick="savePage()">💾 Save</button>
+      <button onclick="duplicatePage()">📄 Duplicate</button>
+      <button onclick="undo()">↩ Undo</button>
+      <button onclick="redo()">↪ Redo</button>
+    </aside>
+
+    <main>
+      <iframe id="preview"></iframe>
+    </main>
+
+    <div id="toolbar">
+      <button onclick="format('bold')">B</button>
+      <button onclick="format('italic')">I</button>
+      <button onclick="format('insertUnorderedList')">• List</button>
+      <button onclick="format('createLink')">🔗 Link</button>
+      <button onclick="format('unlink')">❌</button>
+    </div>
   </div>
 
-  <textarea id="editor"></textarea>
-
-  <script>
-    const dropdown = document.getElementById('dropdown');
-    const editor = document.getElementById('editor');
-    const metaTitle = document.getElementById('metaTitle');
-    const metaDescription = document.getElementById('metaDescription');
-
-    fetch('/projects')
-      .then(res => res.json())
-      .then(projects => {
-        projects.forEach(file => {
-          const opt = document.createElement('option');
-          opt.value = file.path;
-          opt.textContent = file.name;
-          dropdown.appendChild(opt);
-        });
-        if (projects.length > 0) loadProject();
-      });
-
-    dropdown.addEventListener('change', loadProject);
-
-    async function loadProject() {
-      try {
-        const path = dropdown.value;
-        const res = await fetch(`/load?path=${encodeURIComponent(path)}`);
-        const text = await res.text();
-        editor.value = text;
-
-        const titleMatch = text.match(/<!--\s*title\s*:\s*([\s\S]*?)\s*-->/i);
-        const descMatch = text.match(/<!--\s*description\s*:\s*([\s\S]*?)\s*-->/i);
-
-        metaTitle.value = titleMatch ? titleMatch[1].trim() : '';
-        metaDescription.value = descMatch ? descMatch[1].trim() : '';
-      } catch (err) {
-        console.error('Failed to load project file:', err);
-      }
-    }
-
-    async function saveProject() {
-      const path = dropdown.value;
-      const title = metaTitle.value;
-      const description = metaDescription.value;
-
-      let updated = editor.value;
-
-      if (/<!--\s*title\s*:\s*.*?-->/i.test(updated)) {
-        updated = updated.replace(/<!--\s*title\s*:\s*.*?-->/i, `<!-- title: ${title} -->`);
-      } else {
-        updated = `<!-- title: ${title} -->\n` + updated;
-      }
-
-      if (/<!--\s*description\s*:\s*.*?-->/i.test(updated)) {
-        updated = updated.replace(/<!--\s*description\s*:\s*.*?-->/i, `<!-- description: ${description} -->`);
-      } else {
-        updated = updated.replace(/(<!-- title:.*?-->)/i, `$1\n<!-- description: ${description} -->`);
-      }
-
-      await fetch('/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path, content: updated })
-      });
-
-      alert('Saved!');
-    }
-  </script>
+  <script type="module" src="/assets/js/studio-editor.js"></script>
 </body>
 </html>
