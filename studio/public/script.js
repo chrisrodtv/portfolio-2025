@@ -1,45 +1,46 @@
-function updatePreview() {
-  const content = document.getElementById('markdown-content').value;
-  fetch('/preview', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ markdown: content })
-  })
-  .then(res => res.text())
-  .then(html => {
-    document.getElementById('preview').innerHTML = html;
-  });
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const projectSelect = document.getElementById("projectSelect");
+  const editor = document.getElementById("editor");
+  const saveBtn = document.getElementById("saveBtn");
 
-document.getElementById('markdown-content')?.addEventListener('input', updatePreview);
+  let currentPath = null;
 
-function insertAtCursor(text) {
-  const textarea = document.getElementById('markdown-content');
-  const start = textarea.selectionStart;
-  const end = textarea.selectionEnd;
-  const current = textarea.value;
-  textarea.value = current.substring(0, start) + text + current.substring(end);
-  textarea.focus();
-  textarea.selectionStart = textarea.selectionEnd = start + text.length;
-  updatePreview();
-}
-
-const uploadForm = document.getElementById('upload-form');
-if (uploadForm) {
-  uploadForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fileInput = document.getElementById('image-upload');
-    const formData = new FormData();
-    formData.append('image', fileInput.files[0]);
-
-    const res = await fetch('/upload-image', {
-      method: 'POST',
-      body: formData
+  // Load list of projects
+  fetch("/folders")
+    .then(res => res.json())
+    .then(data => {
+      projectSelect.innerHTML = "";
+      data.forEach(file => {
+        const option = document.createElement("option");
+        option.value = file.path;
+        option.textContent = file.name;
+        projectSelect.appendChild(option);
+      });
+      if (data.length > 0) {
+        projectSelect.dispatchEvent(new Event("change"));
+      }
     });
 
-    const data = await res.json();
-    const markdown = `![alt text](${data.url})`;
-    insertAtCursor(markdown);
-    document.getElementById('upload-status').innerText = 'Uploaded ✓';
+  // Load content when project is selected
+  projectSelect.addEventListener("change", () => {
+    currentPath = projectSelect.value;
+    fetch(`/file?path=${encodeURIComponent(currentPath)}`)
+      .then(res => res.text())
+      .then(text => {
+        editor.value = text;
+      });
   });
-}
+
+  // Save button
+  saveBtn.addEventListener("click", () => {
+    if (!currentPath) return;
+    fetch("/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: currentPath, content: editor.value })
+    })
+      .then(res => res.text())
+      .then(msg => alert("Saved!"))
+      .catch(err => alert("Error saving file."));
+  });
+});

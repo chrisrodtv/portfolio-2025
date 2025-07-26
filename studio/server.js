@@ -1,53 +1,72 @@
 const express = require("express");
-const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
-const marked = require("marked");
 const app = express();
 const PORT = 3000;
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
-app.set("view engine", "ejs");
 
-const upload = multer({ dest: "temp_uploads/" });
-
-// Serve main interface
+// Serve editor UI
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "studio-index.html"));
+  res.sendFile(path.join(__dirname, "public", "studio-index.html"));
 });
 
-// Get list of project folders
-app.get("/projects", (req, res) => {
-  const dir = path.join(__dirname, "../pages/work/");
-  const folders = fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isDirectory());
-  res.json(folders);
+// List all project HTML files
+app.get("/folders", (req, res) => {
+  const base = path.join(__dirname, "..", "pages", "work");
+
+  const getProjectFiles = dir => {
+    let results = [];
+    const list = fs.readdirSync(dir);
+    list.forEach(file => {
+      const fullPath = path.join(dir, file);
+      const stat = fs.statSync(fullPath);
+      if (stat && stat.isDirectory()) {
+        results = results.concat(getProjectFiles(fullPath));
+      } else if (file.endsWith("-index.html")) {
+        results.push({
+          name: file,
+          path: path.relative(path.join(__dirname, ".."), fullPath)
+        });
+      }
+    });
+    return results;
+  };
+
+  try {
+    const files = getProjectFiles(base);
+    res.json(files);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error reading folders");
+  }
 });
 
-// Handle markdown preview
-app.post("/preview", (req, res) => {
-  const html = marked.parse(req.body.markdown || "");
-  res.send(html);
+// Load file content
+app.get("/file", (req, res) => {
+  const relPath = req.query.path;
+  const fullPath = path.join(__dirname, "..", relPath);
+  if (!fs.existsSync(fullPath)) {
+    return res.status(404).send("File not found");
+  }
+  const content = fs.readFileSync(fullPath, "utf-8");
+  res.send(content);
 });
 
-// Handle media upload
-app.post("/upload", upload.array("media"), (req, res) => {
-  const urls = req.files.map(file => {
-    const url = `https://example-temp-bucket.com/${file.originalname}`;
-    fs.unlinkSync(file.path); // Delete local copy
-    return url;
-  });
-  res.json({ urls });
-});
-
-// Placeholder for browsing Backblaze (to be implemented)
-app.get("/browse-backblaze", (req, res) => {
-  res.json([
-    { name: "project-thumb.jpg", url: "https://cdn.example.com/projects/thumb.jpg" },
-    { name: "clip.mp4", url: "https://cdn.example.com/projects/clip.mp4" }
-  ]);
+// Save file content
+app.post("/save", (req, res) => {
+  const relPath = req.body.path;
+  const fullPath = path.join(__dirname, "..", relPath);
+  try {
+    fs.writeFileSync(fullPath, req.body.content, "utf-8");
+    res.send("File saved");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to save file");
+  }
 });
 
 app.listen(PORT, () => {
-  console.log(`Studio running at http://localhost:${PORT}`);
+  console.log(`Studio server running at http://localhost:${PORT}`);
 });
