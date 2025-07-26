@@ -4,49 +4,77 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-app.use(express.static(path.join(__dirname, 'pages/studio/public')));
+// Middleware to parse JSON
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// 🔍 Phase 2: Load list of project files
-app.get('/projects', (req, res) => {
-  const projectsDir = path.join(__dirname, 'pages', 'work');
-  const projects = [];
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/pages', express.static(path.join(__dirname, 'pages')));
+app.use('/studio', express.static(path.join(__dirname, 'studio')));
 
-  fs.readdirSync(projectsDir).forEach(folder => {
-    const filePath = path.join(projectsDir, folder, `${folder}-index.html`);
-    if (fs.existsSync(filePath)) {
-      projects.push({
-        name: `${folder}-index.html`,
-        path: `pages/work/${folder}/${folder}-index.html`
-      });
+// 🔧 Route: Get list of projects (from /pages/work/)
+app.get('/projects', async (req, res) => {
+  const baseDir = path.join(__dirname, 'pages', 'work');
+
+  try {
+    const folders = await fs.promises.readdir(baseDir, { withFileTypes: true });
+
+    const projects = [];
+
+    for (const folder of folders) {
+      if (folder.isDirectory()) {
+        const htmlPath = path.join(baseDir, folder.name, `${folder.name}-index.html`);
+        try {
+          await fs.promises.access(htmlPath);
+          projects.push({
+            name: folder.name,
+            path: `/pages/work/${folder.name}/${folder.name}-index.html`,
+          });
+        } catch {
+          // skip folders with no matching HTML file
+        }
+      }
     }
-  });
 
-  res.json(projects);
+    res.json(projects);
+  } catch (err) {
+    console.error('Error reading projects:', err);
+    res.status(500).send('Could not load projects');
+  }
 });
 
-// 📥 Load a specific file
-app.get('/load', (req, res) => {
-  const target = req.query.path;
-  if (!target) return res.status(400).send('Missing path');
-
-  const fullPath = path.join(__dirname, target);
-  if (!fs.existsSync(fullPath)) return res.status(404).send('File not found');
-
-  const contents = fs.readFileSync(fullPath, 'utf-8');
-  res.send(contents);
+// 🔧 Route: Load a project file
+app.get('/load', async (req, res) => {
+  const filePath = path.join(__dirname, req.query.path || '');
+  try {
+    const content = await fs.promises.readFile(filePath, 'utf-8');
+    res.send(content);
+  } catch (err) {
+    console.error('Failed to load file:', err);
+    res.status(500).send('Failed to load file');
+  }
 });
 
-// 💾 Save updated content
-app.post('/save', (req, res) => {
-  const { path: filePath, content } = req.body;
-  if (!filePath || !content) return res.status(400).send('Missing data');
-
-  const fullPath = path.join(__dirname, filePath);
-  fs.writeFileSync(fullPath, content, 'utf-8');
-  res.sendStatus(200);
+// 🔧 Route: Save a project file
+app.post('/save', async (req, res) => {
+  const filePath = path.join(__dirname, req.body.path || '');
+  const content = req.body.content || '';
+  try {
+    await fs.promises.writeFile(filePath, content, 'utf-8');
+    res.send('Saved');
+  } catch (err) {
+    console.error('Failed to save file:', err);
+    res.status(500).send('Failed to save file');
+  }
 });
 
+// Default fallback
+app.get('*', (req, res) => {
+  res.status(404).send('Page not found');
+});
+
+// Start server
 app.listen(PORT, () => {
-  console.log(`Studio server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });

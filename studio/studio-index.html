@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -61,7 +62,6 @@
     const metaTitle = document.getElementById('metaTitle');
     const metaDescription = document.getElementById('metaDescription');
 
-    // Load project list on start
     fetch('/projects')
       .then(res => res.json())
       .then(projects => {
@@ -77,16 +77,20 @@
     dropdown.addEventListener('change', loadProject);
 
     async function loadProject() {
-      const path = dropdown.value;
-      const res = await fetch(`/load?path=${encodeURIComponent(path)}`);
-      const text = await res.text();
-      editor.value = text;
+      try {
+        const path = dropdown.value;
+        const res = await fetch(`/load?path=${encodeURIComponent(path)}`);
+        const text = await res.text();
+        editor.value = text;
 
-      const titleMatch = text.match(/<!--\s*title\s*:\s*([\s\S]*?)\s*-->/i);
-      const descMatch = text.match(/<!--\s*description\s*:\s*([\s\S]*?)\s*-->/i);
+        const titleMatch = text.match(/<!--\s*title\s*:\s*([\s\S]*?)\s*-->/i);
+        const descMatch = text.match(/<!--\s*description\s*:\s*([\s\S]*?)\s*-->/i);
 
-      metaTitle.value = titleMatch ? titleMatch[1].trim() : '';
-      metaDescription.value = descMatch ? descMatch[1].trim() : '';
+        metaTitle.value = titleMatch ? titleMatch[1].trim() : '';
+        metaDescription.value = descMatch ? descMatch[1].trim() : '';
+      } catch (err) {
+        console.error('Failed to load project file:', err);
+      }
     }
 
     async function saveProject() {
@@ -96,14 +100,12 @@
 
       let updated = editor.value;
 
-      // Replace or insert title
       if (/<!--\s*title\s*:\s*.*?-->/i.test(updated)) {
         updated = updated.replace(/<!--\s*title\s*:\s*.*?-->/i, `<!-- title: ${title} -->`);
       } else {
         updated = `<!-- title: ${title} -->\n` + updated;
       }
 
-      // Replace or insert description
       if (/<!--\s*description\s*:\s*.*?-->/i.test(updated)) {
         updated = updated.replace(/<!--\s*description\s*:\s*.*?-->/i, `<!-- description: ${description} -->`);
       } else {
