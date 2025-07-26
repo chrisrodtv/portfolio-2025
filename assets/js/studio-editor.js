@@ -1,116 +1,169 @@
-let currentPath = '';
+let currentPath = 'index.html';
 let historyStack = [];
 let redoStack = [];
+let selectedElement = null;
 
-function $(id) {
-  return document.getElementById(id);
-}
+const $ = id => document.getElementById(id);
 
-window.onload = async () => {
-  await loadProjects();
+// === INIT ===
+window.onload = () => {
+  $('projectSelector').value = 'index.html';
   $('projectSelector').addEventListener('change', loadPage);
-  $('paddingSlider').addEventListener('input', () => applyStyle('padding', $('paddingSlider').value + 'px'));
-  $('fontSelector').addEventListener('change', () => applyStyle('fontFamily', $('fontSelector').value));
-  $('colorPicker').addEventListener('input', () => applyStyle('color', $('colorPicker').value));
-  ['fgColor', 'bgColor', 'accentColor'].forEach(id => {
-    $(id).addEventListener('input', updateCSSVariable);
-  });
+  setupInspector();
+  $('uploadInput').addEventListener('change', handleUpload);
+  loadPage();
 };
 
-async function loadProjects() {
-  const res = await fetch('/list-projects');
-  const projects = await res.json();
-  $('projectSelector').innerHTML = projects.map(p => `<option value="${p}">${p}</option>`).join('');
-  loadPage();
-}
-
-async function loadPage() {
-  const project = $('projectSelector').value;
-  currentPath = `/pages/${project}`;
-  const iframe = $('preview');
-  iframe.src = currentPath;
-
-  iframe.onload = () => {
-    const doc = iframe.contentDocument;
-    const html = doc.documentElement.outerHTML;
-    saveToHistory(html);
-    parseMetadata(doc);
+// === LOAD REAL SITE AND INJECT EDITOR ===
+function loadPage() {
+  $('preview').src = '/index.html?studio=true';
+  $('preview').onload = () => {
+    const doc = $('preview').contentDocument;
+    injectStudioCSS(doc);
+    injectEditingTools(doc);
     enableEditing(doc.body);
+    saveToHistory(doc.documentElement.outerHTML);
   };
 }
 
-function parseMetadata(doc) {
-  const comments = Array.from(doc.childNodes).filter(n => n.nodeType === 8);
-  $('pageTitle').value = comments.find(c => c.nodeValue.startsWith(' title:'))?.nodeValue.split(':')[1].trim() || '';
-  $('pageDescription').value = comments.find(c => c.nodeValue.startsWith(' description:'))?.nodeValue.split(':')[1].trim() || '';
+// === INJECT STUDIO STYLES + OVERLAYS ===
+function injectStudioCSS(doc) {
+  const style = doc.createElement('link');
+  style.rel = 'stylesheet';
+  style.href = '/assets/css/studio.css';
+  doc.head.appendChild(style);
 }
 
-function enableEditing(root) {
-  root.querySelectorAll('*').forEach(el => {
-    if (el.tagName === 'IMG') {
-      el.onclick = () => replaceImage(el);
-    } else {
-      el.contentEditable = true;
-      el.oninput = () => saveToHistory();
-    }
-  });
+function injectEditingTools(doc) {
+  const overlay = doc.createElement('div');
+  overlay.id = 'studio-floating-tools';
+  overlay.style = 'position:fixed;top:10px;left:10px;z-index:9999;padding:8px;background:#fff;border:1px solid #000;';
+  overlay.innerHTML = `<span style="font-weight:bold">Studio Editor Active</span>`;
+  doc.body.appendChild(overlay);
 }
 
-function insertSection() {
+// === BLOCK INSERTION ===
+function insertBlock(type) {
   const doc = $('preview').contentDocument;
-  const div = doc.createElement('div');
-  div.innerHTML = `<h2 contenteditable="true">New Section</h2><p contenteditable="true">Lorem ipsum</p>`;
-  doc.body.appendChild(div);
-  saveToHistory();
-}
+  let el = doc.createElement('div');
+  el.contentEditable = true;
 
-function insertImageGrid() {
-  const doc = $('preview').contentDocument;
-  const div = doc.createElement('div');
-  div.innerHTML = `<div><img src="https://placehold.co/300x200" /><img src="https://placehold.co/300x200" /></div>`;
-  doc.body.appendChild(div);
+  switch (type) {
+    case 'text':
+      el.innerHTML = `<p contenteditable="true">Editable text block</p>`;
+      break;
+    case 'image':
+      el.innerHTML = `<img src="https://placehold.co/600x400" />`;
+      break;
+    case 'video':
+      el.innerHTML = `<video controls width="300"><source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"></video>`;
+      break;
+    case 'button':
+      el.innerHTML = `<button>Edit Me</button>`;
+      break;
+    case 'embed':
+      el.innerHTML = `<iframe width="300" height="200" src="https://example.com"></iframe>`;
+      break;
+    case 'section':
+      el.innerHTML = `<section><h2>New Section</h2><p>Text here...</p></section>`;
+      break;
+  }
+
+  doc.body.appendChild(el);
   enableEditing(doc.body);
   saveToHistory();
 }
 
-function insertButton() {
-  const doc = $('preview').contentDocument;
-  const btn = doc.createElement('button');
-  btn.textContent = 'Click Me';
-  doc.body.appendChild(btn);
-  saveToHistory();
+// === STYLE INSPECTOR ===
+function setupInspector() {
+  $('fontSizeInput').addEventListener('input', () => {
+    if (selectedElement) selectedElement.style.fontSize = $('fontSizeInput').value + 'px';
+  });
+  $('paddingInput').addEventListener('input', () => {
+    if (selectedElement) selectedElement.style.padding = $('paddingInput').value + 'px';
+  });
+  $('colorInput').addEventListener('input', () => {
+    if (selectedElement) selectedElement.style.color = $('colorInput').value;
+  });
+  $('bgInput').addEventListener('input', () => {
+    if (selectedElement) selectedElement.style.backgroundColor = $('bgInput').value;
+  });
+
+  $('toggleLogo').addEventListener('change', toggleComponent);
+  $('toggleNav').addEventListener('change', toggleComponent);
+  $('toggleFooter').addEventListener('change', toggleComponent);
 }
 
-function replaceImage(el) {
-  const url = prompt("Paste image URL:");
-  if (url) {
-    el.src = url;
-    saveToHistory();
+function toggleComponent() {
+  const doc = $('preview').contentDocument;
+  if (this.id === 'toggleLogo') {
+    toggleBlock(doc, 'logo', '<div id="logo">LOGO BLOCK</div>');
+  }
+  if (this.id === 'toggleNav') {
+    toggleBlock(doc, 'nav', '<nav id="nav">NAVIGATION</nav>');
+  }
+  if (this.id === 'toggleFooter') {
+    toggleBlock(doc, 'footer', '<footer id="footer">FOOTER</footer>');
   }
 }
 
-function format(cmd) {
-  $('preview').contentWindow.document.execCommand(cmd);
+function toggleBlock(doc, id, html) {
+  const el = doc.getElementById(id);
+  if (el) el.remove();
+  else {
+    const wrapper = doc.createElement('div');
+    wrapper.innerHTML = html;
+    doc.body.insertBefore(wrapper.firstChild, doc.body.firstChild);
+  }
   saveToHistory();
 }
 
-function applyStyle(prop, value) {
-  const sel = $('preview').contentWindow.getSelection();
-  if (!sel.rangeCount) return;
-  const el = sel.getRangeAt(0).startContainer.parentElement;
-  el.style[prop] = value;
-  saveToHistory();
+// === ENABLE EDITING ===
+function enableEditing(root) {
+  root.querySelectorAll('*').forEach(el => {
+    if (!['HTML', 'BODY', 'SCRIPT', 'STYLE'].includes(el.tagName)) {
+      el.onclick = e => {
+        e.stopPropagation();
+        selectedElement = el;
+        $('fontSizeInput').value = parseInt(getComputedStyle(el).fontSize) || 16;
+        $('paddingInput').value = parseInt(getComputedStyle(el).padding) || 0;
+        $('colorInput').value = rgbToHex(getComputedStyle(el).color);
+        $('bgInput').value = rgbToHex(getComputedStyle(el).backgroundColor);
+      };
+      if (el.tagName !== 'IMG' && !el.closest('video')) el.contentEditable = true;
+    }
+  });
 }
 
-function updateCSSVariable(e) {
-  const root = $('preview').contentDocument.documentElement;
-  root.style.setProperty(`--${e.target.id}`, e.target.value);
-  saveToHistory();
+function rgbToHex(rgb) {
+  const rgbMatch = rgb.match(/\d+/g);
+  return rgbMatch ? "#" + rgbMatch.map(x => parseInt(x).toString(16).padStart(2, '0')).join('') : '#000000';
 }
 
-function saveToHistory(htmlOverride = null) {
-  const doc = $('preview').contentDocument.documentElement.outerHTML;
-  historyStack.push(htmlOverride || doc);
+// === UPLOAD ===
+function handleUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  fetch('/upload', {
+    method: 'POST',
+    body: formData
+  }).then(res => res.json()).then(data => {
+    if (selectedElement && selectedElement.tagName === 'IMG') {
+      selectedElement.src = data.url;
+    } else {
+      alert('Uploaded: ' + data.url);
+    }
+  });
+}
+
+// === UNDO / REDO ===
+function saveToHistory(html) {
+  const current = html || $('preview').contentDocument.documentElement.outerHTML;
+  historyStack.push(current);
   redoStack = [];
 }
 
@@ -121,60 +174,44 @@ function undo() {
     $('preview').contentDocument.open();
     $('preview').contentDocument.write(prev);
     $('preview').contentDocument.close();
+    injectStudioCSS($('preview').contentDocument);
     enableEditing($('preview').contentDocument.body);
   }
 }
 
 function redo() {
-  if (redoStack.length > 0) {
+  if (redoStack.length) {
     const next = redoStack.pop();
     $('preview').contentDocument.open();
     $('preview').contentDocument.write(next);
     $('preview').contentDocument.close();
+    injectStudioCSS($('preview').contentDocument);
     enableEditing($('preview').contentDocument.body);
     saveToHistory(next);
   }
 }
 
-async function savePage() {
+// === SAVE & PREVIEW ===
+function savePage() {
   const html = $('preview').contentDocument.documentElement.outerHTML;
-  const path = $('projectSelector').value;
-  await fetch('/save-html', {
+  fetch('/save-html', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ path, html })
-  });
-  alert('Saved!');
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: currentPath, html })
+  }).then(() => alert('Saved!'));
 }
 
-function duplicatePage() {
-  const title = prompt('New file name (e.g. "copy.html")');
-  if (title) {
-    fetch('/duplicate-page', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ from: $('projectSelector').value, to: title })
-    }).then(() => {
-      alert('Page duplicated!');
-      loadProjects();
-    });
-  }
+function previewPage() {
+  window.open(`/${currentPath}`, '_blank');
 }
 
-function handleUpload(files) {
-  [...files].forEach(async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    await fetch('/upload', { method: 'POST', body: formData });
-  });
-}
-window.insertSection = insertSection;
-window.insertImageGrid = insertImageGrid;
-window.insertButton = insertButton;
-window.undo = undo;
-window.redo = redo;
-window.format = format;
-window.savePage = savePage;
-window.duplicatePage = duplicatePage;
-window.handleUpload = handleUpload;
-window.replaceImage = replaceImage;
+// === AUTO EXPORT ===
+Object.entries({
+  loadPage,
+  insertBlock,
+  savePage,
+  undo,
+  redo,
+  previewPage,
+  handleUpload
+}).forEach(([k, fn]) => window[k] = fn);

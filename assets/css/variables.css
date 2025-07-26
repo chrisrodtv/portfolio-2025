@@ -1,13 +1,16 @@
 :root {
   --background-color: #0D0D0D;
   --foreground-color: #E7ECCF;
-  --accent-color: #beff00;
+  --accent-color: #BEFF00;
 
-  --font-header: 'SohneMonoHalbfettKursiv', monospace;
-  --font-subheader: 'ABCMaxiLight', sans-serif;
-  --font-subheader-bold: 'ABCMaxiBold', sans-serif;
-  --font-body: 'SohneKraeftig', sans-serif;
-  --font-body-bold: 'SohneFett', sans-serif;
+  --font-header: 'SöhneMono Halbfett Kursiv';
+  --font-subheader: 'ABCMaxi';
+  --font-subheader-bold: 'BCMaxi Bold';
+  --font-body: 'Söhne Kräftig';
+  --font-body-bold: 'Söhne Fett';
+
+  --border-radius: 20px;
+  --border-width: 2px;
 }
 
 .light-theme {

@@ -1,24 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const landing = document.getElementById("landing");
-  const main = document.getElementById("main");
   const themeToggle = document.getElementById("theme-toggle");
-  const menuToggle = document.getElementById("menu-toggle");
-  const nav = document.getElementById("main-nav");
-
-  // Theme toggle
   themeToggle.addEventListener("click", () => {
-    document.body.classList.toggle("light-theme");
-    themeToggle.textContent = document.body.classList.contains("light-theme") ? "☾" : "☀";
+    const body = document.body;
+    body.classList.toggle("light-theme");
+    themeToggle.textContent = body.classList.contains("light-theme") ? "☾" : "☀";
   });
 
-  // Landing transition
+  const landing = document.getElementById("landing");
   window.addEventListener("scroll", () => {
-    landing.classList.add("hidden");
-    main.classList.remove("hidden");
-  }, { once: true });
-
-  // Menu toggle
-  menuToggle.addEventListener("click", () => {
-    nav.classList.toggle("active");
+    if (window.scrollY > 100) {
+      landing.style.opacity = "0";
+      landing.style.pointerEvents = "none";
+    } else {
+      landing.style.opacity = "1";
+      landing.style.pointerEvents = "all";
+    }
   });
 });

@@ -8,65 +8,58 @@
 </head>
 <body>
   <div id="studio">
+
     <aside id="sidebar">
-      <h2>Project</h2>
-      <select id="projectSelector"></select>
+      <h2>STUDIO</h2>
 
-      <h3>Title</h3>
-      <input type="text" id="pageTitle" />
+      <section>
+        <h3>Pages</h3>
+        <select id="projectSelector"></select>
+        <button onclick="createNewPage()">➕ New Page</button>
+      </section>
 
-      <h3>Description</h3>
-      <textarea id="pageDescription"></textarea>
+      <section>
+        <h3>Insert Block</h3>
+        <button onclick="insertBlock('text')">Text</button>
+        <button onclick="insertBlock('image')">Image</button>
+        <button onclick="insertBlock('video')">Video</button>
+        <button onclick="insertBlock('button')">Button</button>
+        <button onclick="insertBlock('embed')">Embed</button>
+        <button onclick="insertBlock('section')">Section</button>
+      </section>
 
-      <h3>Blocks</h3>
-      <button onclick="insertSection()">Add Section</button>
-      <button onclick="insertImageGrid()">Insert Image Grid</button>
-      <button onclick="insertButton()">Insert Button</button>
+      <section>
+        <h3>Layout</h3>
+        <label><input type="checkbox" id="toggleLogo"> Show Logo</label>
+        <label><input type="checkbox" id="toggleNav"> Show Navigation</label>
+        <label><input type="checkbox" id="toggleFooter"> Show Footer</label>
+      </section>
 
-      <h3>Media</h3>
-      <div id="mediaBrowser"></div>
-      <input type="file" id="mediaUpload" multiple onchange="handleUpload(this.files)" />
+      <section id="inspector">
+        <h3>Inspector</h3>
+        <label>Font Size <input type="number" id="fontSizeInput" /></label>
+        <label>Padding <input type="number" id="paddingInput" /></label>
+        <label>Text Color <input type="color" id="colorInput" /></label>
+        <label>Background <input type="color" id="bgInput" /></label>
+      </section>
 
-      <h3>Styles</h3>
-      <div id="styleControls">
-        <label>Font:</label>
-        <select id="fontSelector">
-          <option value="inherit">Inherit</option>
-          <option value="Söhne">Söhne</option>
-          <option value="ABC Maxi">ABC Maxi</option>
-        </select>
-        <label>Color:</label>
-        <input type="color" id="colorPicker" />
-        <label>Padding:</label>
-        <input type="range" id="paddingSlider" min="0" max="100" />
-      </div>
+      <section>
+        <h3>Media</h3>
+        <input type="file" id="uploadInput" />
+      </section>
 
-      <h3>Global Styles</h3>
-      <label>--foreground-color</label>
-      <input type="color" id="fgColor" />
-      <label>--background-color</label>
-      <input type="color" id="bgColor" />
-      <label>--accent-color</label>
-      <input type="color" id="accentColor" />
-
-      <h3>Actions</h3>
-      <button onclick="savePage()">💾 Save</button>
-      <button onclick="duplicatePage()">📄 Duplicate</button>
-      <button onclick="undo()">↩ Undo</button>
-      <button onclick="redo()">↪ Redo</button>
+      <section id="actions">
+        <button onclick="undo()">↩ Undo</button>
+        <button onclick="redo()">↪ Redo</button>
+        <button onclick="savePage()">💾 Save</button>
+        <button onclick="previewPage()">👁 Preview</button>
+      </section>
     </aside>
 
     <main>
       <iframe id="preview"></iframe>
     </main>
 
-    <div id="toolbar">
-      <button onclick="format('bold')">B</button>
-      <button onclick="format('italic')">I</button>
-      <button onclick="format('insertUnorderedList')">• List</button>
-      <button onclick="format('createLink')">🔗 Link</button>
-      <button onclick="format('unlink')">❌</button>
-    </div>
   </div>
 
   <script type="module" src="/assets/js/studio-editor.js"></script>

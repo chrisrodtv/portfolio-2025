@@ -4,34 +4,36 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chris Rodriguez — Portfolio</title>
+  <link rel="stylesheet" href="assets/css/variables.css" />
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
-<body>
-
+<body class="dark-theme">
   <div class="theme-toggle" id="theme-toggle">☀</div>
 
-  <div class="cursor-dot"></div>
-  <div class="cursor-outline"></div>
-
-  <div class="menu-toggle" id="menu-toggle">☰</div>
-
-  <nav class="nav" id="main-nav">
-    <a href="index.html">WORK</a><span>—</span>
-    <a href="pages/reel.html">REEL</a><span>—</span>
-    <a href="pages/funzies.html">FUNZIES</a><span>—</span>
-    <a href="pages/info.html">INFO</a>
-  </nav>
+  <div class="cursor-icon" id="cursor-icon">+</div>
+  <div id="cursor"></div>
+  <div id="cursor-follower"></div>
 
   <div class="landing" id="landing">
     <h1>CHRIS RODRIGUEZ</h1>
     <p class="scroll-hint">Scroll to enter</p>
   </div>
 
-  <main class="main hidden" id="main">
-    <section class="grid">
-      <a class="project-card" href="pages/work/baths/baths-index.html">Baths</a>
-      <a class="project-card" href="pages/work/bones/bones-index.html">Bones</a>
-      <a class="project-card" href="pages/work/primitive/primitive-index.html">Primitive</a>
+  <header class="main-nav">
+    <nav>
+      <a href="#">WORK</a> — 
+      <a href="#">REEL</a> — 
+      <a href="#">FUNZIES</a> — 
+      <a href="#">INFO</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="projects-grid">
+      <!-- Placeholder project tiles -->
+      <div class="project-tile">PROJECT 1</div>
+      <div class="project-tile">PROJECT 2</div>
+      <div class="project-tile">PROJECT 3</div>
     </section>
   </main>
 
