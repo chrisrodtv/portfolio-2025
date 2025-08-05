@@ -1,0 +1,111 @@
+/* THEME VARIABLE SETUP */
+.theme-dark {
+  --color-bg: var(--_theme--colors---dark--color-bg);
+  --color-fg: var(--_theme--colors---dark--color-fg);
+  --color-accent: var(--_theme--colors---dark--color-accent);
+  --color-low: var(--_theme--colors---dark--color-low);
+}
+
+.theme-light {
+  --color-bg: var(--_theme--colors---light--color-bg);
+  --color-fg: var(--_theme--colors---light--color-fg);
+  --color-accent: var(--_theme--colors---light--color-accent);
+  --color-low: var(--_theme--colors---light--color-low);
+}
+
+.theme-accent {
+  --color-bg: var(--_theme--colors---accent--color-bg);
+  --color-fg: var(--_theme--colors---accent--color-fg);
+  --color-accent: var(--_theme--colors---accent--color-accent);
+  --color-low: var(--_theme--colors---accent--color-low);
+}
+
+/* GLOBAL STYLES */
+body {
+  background-color: var(--color-fg);
+  color: var(--color-fg);
+  font-family: "Soehne Buch", sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.section-block {
+  background-color: var(--color-bg);
+  padding: 4rem;
+}
+
+.nav-link,
+.theme-button svg path {
+  color: var(--color-fg);
+  fill: var(--color-fg);
+}
+
+a,
+a:visited {
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-accent);
+}
+
+/* SCROLLBAR (WebKit) */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-low);
+  border-radius: 999px;
+}
+
+/* MARQUEE SCROLL */
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% - 1rem));
+  }
+}
+.scroll {
+  animation: scroll 10s linear infinite;
+}
+.reverse {
+  animation-direction: reverse;
+}
+
+/* JUSTIFY BODY TEXT */
+.navbar-bio-text {
+  text-align: justify;
+  text-align-last: justify;
+}
+
+/* GPU IMAGE OPTIMIZATION */
+.marquee-image {
+  -webkit-transform: translateZ(0); /* Safari, older Chrome */
+  transform: translateZ(0);         /* Standard */
+}
+
+
+/* TV SUPERSCRIPT STYLING */
+.z-wrap {
+  position: relative;
+  display: inline-block;
+}
+.tv-char {
+  position: absolute;
+  top: 0.72em;
+  font-size: 0.22em;
+  color: var(--color-accent);
+  font-weight: 700;
+  line-height: 0;
+}
+.t-char {
+  left: 3.15em;
+}
+.v-char {
+  left: calc(3.15em + 0.72em);
+}

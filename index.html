@@ -1,59 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chris Rodriguez — Portfolio</title>
-  <link rel="stylesheet" href="assets/css/style.css" />
-</head>
-<body class="dark-theme">
-  
-  <!-- TOP BAR -->
-  <div class="top-bar">
-    <div class="top-left">
-      <img src="assets/icons/hawkmoth.svg" alt="Logo" class="logo"/>
-      <p class="tagline">MOTION DESIGN & EXPERIMENTAL FILM<br>DIGITAL&nbsp;&nbsp;AND&nbsp;&nbsp;HANDCRAFTED&nbsp;&nbsp;MEDIA</p>
-    </div>
-    <div class="top-center">
-      <button id="theme-toggle" class="theme-toggle">🌙 ☀ ⚡</button>
-    </div>
-    <div class="top-right">
-      <nav class="nav-links">
-        <a href="#">WORK</a>
-        <span>—</span>
-        <a href="#">PLAY</a>
-        <span>—</span>
-        <a href="#">REEL</a>
-        <span>—</span>
-        <a href="#">INFO</a>
-        <span class="menu-icon">＋</span>
-      </nav>
-    </div>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chris Rodriguez TV</title>
 
-  <!-- HERO SECTION -->
-  <main class="hero">
-    <div class="hero-name">
-      <h1>CHRIS</h1>
-      <h1>RODRIGUEZ <span class="accent">TV</span></h1>
+    <!-- EARLY THEME SETTER TO PREVENT FLASH -->
+    <script>
+      (function () {
+        const theme = localStorage.getItem("theme") || "dark";
+        document.documentElement.classList.add(`theme-${theme}`);
+      })();
+    </script>
+
+    <!-- FONT LOADING -->
+    <link rel="stylesheet" href="assets/css/fonts.css" />
+
+    <!-- MAIN CSS -->
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+
+  <body>
+    <!-- SITE CONTENT EXAMPLE -->
+    <main class="section-block">
+      <h1 class="js-heading">
+        <span class="line line-1">CHRIS RODRIGUEZ</span><br />
+        <span class="line line-2">ZTV</span>
+      </h1>
+      <p class="navbar-bio-text">
+        Designer, animator, signal explorer. This is my analog playground.
+      </p>
+    </main>
+
+    <!-- THEME TOGGLE (Mockup) -->
+    <div class="toggle-switch">
+      <div class="theme-button-wrapper">
+        <button class="theme-button" data-theme="dark">🌑</button>
+      </div>
+      <div class="theme-button-wrapper">
+        <button class="theme-button" data-theme="light">🌕</button>
+      </div>
+      <div class="theme-button-wrapper">
+        <button class="theme-button" data-theme="accent">⚡</button>
+      </div>
     </div>
-    <div class="scroll-hint">↓</div>
-  </main>
 
-  <!-- FOOTER TICKER -->
-  <footer class="footer-ticker">
-    <div class="ticker-content">
-      • BORN IN NEW YORK • BASED IN SPAIN • WORKING GLOBALLY • BORN IN NEW YORK • BASED IN SPAIN • WORKING GLOBALLY •
-    </div>
-  </footer>
-
-  <script>
-    // Theme toggle
-    document.getElementById('theme-toggle').addEventListener('click', () => {
-      document.body.classList.toggle('light-theme');
-      document.body.classList.toggle('dark-theme');
-    });
-  </script>
-
-</body>
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lettering.js/0.7.0/jquery.lettering.min.js"></script>
+    <script src="assets/js/theme.js"></script>
+    <script src="assets/js/superscript.js"></script>
+  </body>
 </html>

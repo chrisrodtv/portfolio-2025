@@ -1,0 +1,55 @@
+@font-face {
+  font-family: "Soehne Mono Halbfett Kursiv";
+  src: url("../fonts/SoehneMono-HalbfettKursiv.otf") format("opentype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Soehne Halbfett";
+  src: url("../fonts/Soehne-Halbfett.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Soehne Buch";
+  src: url("../fonts/Soehne-Buch.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Soehne Buch Kursiv";
+  src: url("../fonts/Soehne-BuchKursiv.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ABC Maxi Round Mono Light";
+  src: url("../fonts/ABCMaxiRoundMono-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ABC Maxi Round Mono Bold";
+  src: url("../fonts/ABCMaxiRoundMono-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Soehne Mono Leicht Kursiv";
+  src: url("../fonts/SoehneMono-LeichtKursiv.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
